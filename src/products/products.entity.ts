@@ -17,7 +17,7 @@ export class ProductEntity {
   user_id: string;
   @Column('integer', { default: 1 })
   quantity: number;
-  @Column('text', { unique: true })
+  @Column('text', { unique: true, nullable: true })
   title: string;
   @Column('text')
   description: string;

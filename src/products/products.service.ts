@@ -14,8 +14,14 @@ export class ProductsService {
     @InjectRepository(ProductEntity)
     private readonly products: Repository<ProductEntity>,
   ) {}
-  async getProducts(data: any): Promise<ProductEntity[]> {
-    return await this.products.find(data);
+  async getProducts(): Promise<ProductEntity[]> {
+    console.log('data loader');
+    return await this.products.find();
+  }
+
+  async show(id: string): Promise<ProductEntity> {
+    console.log('loader');
+    return await this.products.findOneBy({ id });
   }
   async fetchProductsByIds(ids: Array<string>): Promise<ProductEntity[]> {
     return await this.products
@@ -23,35 +29,34 @@ export class ProductsService {
       .where(`products.id IN (:...ids)`, { ids })
       .getMany();
   }
-  async store(data: any): Promise<ProductEntity> {
-    return await this.products.save(data);
+  async store(createProductDto: any): Promise<ProductEntity> {
+    return await this.products.save(createProductDto);
   }
 
   async update(
     id: string,
     data: object,
-    user_id: string,
+    userId: string,
   ): Promise<ProductEntity> {
     const product = await this.products.findOneBy({ id });
-    if (product.user_id === user_id) {
+    if (product.user_id === userId) {
       await this.products.update({ id }, data);
+
       return await this.products.findOneBy({ id });
     }
     throw new RpcException(
       new NotFoundException("You cannot update what you don't own..."),
     );
   }
-  async show(id: string): Promise<ProductEntity> {
-    return await this.products.findOneOrFail({ where: { id } });
-  }
-  async destroy(id: string, user_id: string): Promise<ProductEntity> {
-    const product = await this.products.findOneBy({ id });
-    if (product.user_id === user_id) {
-      await this.products.delete({ id });
-      return product;
+
+  async deleteProduct(productId: string, userId: string): Promise<any> {
+    const product = await this.products.findOneBy({ id: productId });
+    if (product.user_id === userId) {
+      await this.products.delete({ id: productId });
+      return null;
     }
     throw new RpcException(
-      new NotFoundException("You cannot update what you don't own..."),
+      new NotFoundException("You cannot delete what you don't own..."),
     );
   }
   async decrementProductsStock(products) {
